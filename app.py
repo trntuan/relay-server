@@ -165,7 +165,7 @@ def send_notification_to_topic():
             notification=messaging.WebpushNotification(
                 title=title,
                 body=body,
-                icon='https://erpsgs.in/assets/raven/raven_mobile/favicon-32x32.png',
+                icon='https://erpsgs.in/assets/raven/raven_mobile/favicon-64x64.png',
             ),
 			fcm_options=messaging.WebpushFCMOptions(link=data.get('click_action')),
         ),

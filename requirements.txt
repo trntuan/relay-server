@@ -1,0 +1,4 @@
+Flask
+Gunicorn
+flask-httpauth
+firebase-admin

@@ -13,7 +13,7 @@ To be able to run this application, you will need to do the following:
   ```
 4. Follow **Register you app** under Step 1 given in the [Firebase documentation](https://firebase.google.com/docs/web/setup#register-app) and obtain the `FIREBASE_CONFIG` JSON object. Save it to `my_secrets.py`.
 5.  Follow this StackOverflow [Link](https://stackoverflow.com/a/54996207) to generate a VAPID key. Save it to `my_secrets.py`
-6.  Generate `API_KEY` & `API_SECRET` and add them to ERPNext Settings. Enable Push notifications in ERPNext settings.
+6.  Generate `API_KEY` & `API_SECRET` and add them to ERPNext Integration Settings. Enable Push notifications in ERPNext settings.
 7.  Add the `API_SECRET` value to the `my_secrets.py`.
 8.  Finally, your `my_secrets.py` should like this
 ``` python

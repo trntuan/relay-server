@@ -12,10 +12,10 @@ To be able to run this application, you will need to do the following:
   export GOOGLE_APPLICATION_CREDENTIALS="/home/frappe/relay-server/{service-account-file_name}.json"
 
   ```
-4. Follow **Register you app** under Step 1 given in the [Firebase documentation](https://firebase.google.com/docs/web/setup#register-app) and obtain the `FIREBASE_CONFIG` JSON object. Save it to `my_secrets.py`.
-5.  Follow this StackOverflow [Link](https://stackoverflow.com/a/54996207) to generate a VAPID key. Save it to `my_secrets.py`
-6.  Generate `API_KEY` & `API_SECRET` and add the `API_SECRET` value to the `my_secrets.py`.
-8.  Finally, your `my_secrets.py` should like this
+6. Follow **Register you app** under Step 1 given in the [Firebase documentation](https://firebase.google.com/docs/web/setup#register-app) and obtain the `FIREBASE_CONFIG` JSON object. Save it to `my_secrets.py`.
+7.  Follow this StackOverflow [Link](https://stackoverflow.com/a/54996207) to generate a VAPID key. Save it to `my_secrets.py`
+8.  Generate `API_KEY` & `API_SECRET` and add the `API_SECRET` value to the `my_secrets.py`.
+9.  Finally, your `my_secrets.py` should like this
 ``` python
 API_SECRET = 'tIUAGguQH-xajbkcjsd-lsd'
 VAPID_PUBLIC_KEY = "Bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -29,8 +29,8 @@ FIREBASE_CONFIG = {
   "measurementId": "G-XXXXXXXXXG"
 }
 ```
-9. Run the application
-10. Add the `API_SECRET` & `API_KEY` in ERPNext Push Notification settings and then enable the Push Notification Relay option.
+10. Run the application
+11. Add the `API_SECRET` & `API_KEY` in ERPNext Push Notification settings and then enable the Push Notification Relay option.
 
 ## Running the Application
 ``` bash

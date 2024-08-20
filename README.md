@@ -5,8 +5,9 @@ This repo was created to enable push notifications for Frappe Apps such as Raven
 To be able to run this application, you will need to do the following:
 
 1. Clone this project and create a virtual environment `python -m venv env`
-2. Create a Firebase Project & get Service Account credentials [Link](https://sharma-vikashkr.medium.com/firebase-how-to-setup-a-firebase-service-account-836a70bb6646)
-3. Run this command on the shell
+2. Install all requirements `pip install -r requirements.txt`
+4. Create a Firebase Project & get Service Account credentials [Link](https://sharma-vikashkr.medium.com/firebase-how-to-setup-a-firebase-service-account-836a70bb6646)
+5. Run this command on the shell
   ``` bash
   export GOOGLE_APPLICATION_CREDENTIALS="/home/frappe/relay-server/{service-account-file_name}.json"
 

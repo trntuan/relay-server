@@ -1,7 +1,7 @@
 # gunicorn.conf.py
 # Non logging stuff
 bind = "0.0.0.0:5000"
-workers = 3
+workers = 1
 # Access log - records incoming HTTP requests
 accesslog = "/home/frappe/relay-server/log/gunicorn.access.log"
 # Error log - records Gunicorn server goings-on

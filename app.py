@@ -1,7 +1,7 @@
 import logging
 import firebase_admin
 import json
-from firebase_admin import messaging
+from firebase_admin import exceptions, messaging
 from flask import Flask, request, jsonify
 from flask_httpauth import HTTPBasicAuth
 from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY
@@ -19,6 +19,11 @@ TOPICS = []
 
 with open('user-device-map.json', 'r') as jsonfile:
 		USER_DEVICE_MAP = json.load(jsonfile)
+
+def save_map_to_file(map):
+	with open('user-device-map.json', 'w') as jsonfile:
+		json.dump(map, jsonfile)
+	print(json.dumps(map, indent=4))
 
 @app.get('/api/method/notification_relay.api.get_config')
 def get_config():
@@ -118,9 +123,8 @@ def add_token():
 			app.logger.info(f'Token added for user {user_id}')
 	else:
 		USER_DEVICE_MAP[key][user_id] = [fcm_token]
-	with open('user-device-map.json', 'w') as jsonfile:
-		json.dump(USER_DEVICE_MAP, jsonfile)
-	print(json.dumps(USER_DEVICE_MAP, indent=4))
+		app.logger.info(f'User entry created & Token added for user {user_id}')
+	save_map_to_file(USER_DEVICE_MAP)
 	response = {
 		'message':{
 			'success':200,
@@ -137,21 +141,19 @@ def remove_token():
 	key = f'{project_name}_{site_name}'
 	user_id = request.args.get('user_id')
 	fcm_token = request.args.get('fcm_token')
-	app.logger.debug(f'Remove Token Request - {request.args}')
-	if user_id in USER_DEVICE_MAP.get(key):
-		try:
-			USER_DEVICE_MAP[key][user_id].remove(fcm_token)
-		except:
-			pass
-	with open('user-device-map.json', 'w') as jsonfile:
-		json.dump(USER_DEVICE_MAP, jsonfile)
-	print(json.dumps(USER_DEVICE_MAP, indent=4))
 	response = {
 		'message':{
 			'success':200,
 			'message':'User Token removed'
 			}
 	}
+	app.logger.debug(f'Remove Token Request - {request.args}')
+	if user_id in USER_DEVICE_MAP.get(key) and USER_DEVICE_MAP.get(key).get(user_id):
+		try:
+			USER_DEVICE_MAP[key][user_id].remove(fcm_token)
+			save_map_to_file(USER_DEVICE_MAP)
+		except ValueError:
+			app.logger.info(f'FCM Token not found for user {user_id}')
 	return response
 
 @app.post("/api/method/notification_relay.api.send_notification.user")
@@ -179,34 +181,39 @@ def send_notification_to_user():
 			),
 			tokens=registration_tokens
 		)
-		response = messaging.send_each_for_multicast(message)
-		if response.failure_count > 0:
-			responses = response.responses
-			failed_tokens = []
-			for idx, resp in enumerate(responses):
-				if not resp.success:
-					# The order of responses corresponds to the order of the registration tokens.
-					failed_tokens.append(registration_tokens[idx])
-			app.logger.error('List of tokens that caused failures: {0}'.format(failed_tokens))
-		elif response.success_count > 0 :
-			
-			app.logger.info(f'Successfully sent message: {response.success_count}, {response.responses}')
-		
+		try:
+			response = messaging.send_each_for_multicast(message)
+			if response.failure_count > 0:
+				responses = response.responses
+				failed_tokens = []
+				for idx, resp in enumerate(responses):
+					if not resp.success:
+						# The order of responses corresponds to the order of the registration tokens.
+						failed_tokens.append(registration_tokens[idx])
+						if isinstance(resp.exception, exceptions.NotFoundError):
+							USER_DEVICE_MAP.get(key).get(user_id).remove(registration_tokens[idx])
+							save_map_to_file(USER_DEVICE_MAP)
+						else:
+							app.logger.debug(f'Exception : {resp.exception}, {resp.exception.code}, {resp.exception.cause}, {resp.exception.http_response}')
+			app.logger.info(f'Successfully sent message: {response.success_count}, {[resp.message_id for resp in response.responses]}')
+		except exceptions.FirebaseError:
+			pass
 		response = {
 			'message':{
 				'success':200,
-				'message':f'Notiifcation sent to {user_id} user'
+				'message':f'{response.success_count} Notiifcation sent to {user_id} user'
 				}
 		}
-		return response
-	response = {
-		'exc':{
-			'status_code':404,
-			'message':f'{user_id} not subscribed to push notifications'
-			}
-	}
-	app.logger.info('Failed to send message:', response)
-	return response, 400
+	else:
+		response = {
+			'exc':{
+				'status_code':404,
+				'message':f'{user_id} not subscribed to push notifications'
+				}
+		}
+		app.logger.info(f'User {user_id} has not enabled notifications')
+		return response, 400
+	return response
 
 @app.post("/api/method/notification_relay.api.send_notification.topic")
 @basic_auth.login_required

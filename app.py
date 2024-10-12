@@ -166,6 +166,9 @@ def send_notification_to_user():
 	title = request.args.get('title')
 	body = request.args.get('body')
 	data = json.loads(request.args.get('data'))
+	notification_icon = data.get('notification_icon')
+	if not notification_icon:
+		notification_icon = ''
 	app.logger.debug(f'User Notification Request - {request.args}')
 	registration_tokens = []
 	if user_id in USER_DEVICE_MAP.get(key) and USER_DEVICE_MAP.get(key).get(user_id):
@@ -175,7 +178,8 @@ def send_notification_to_user():
 				notification=messaging.WebpushNotification(
 					title=title,
 					body=body,
-					icon='https://erpsgs.in/assets/raven/raven_mobile/favicon-64x64.png',
+					icon= notification_icon,
+					badge= 'https://erpsgs.in/files/raven.png'
 				),
 				fcm_options=messaging.WebpushFCMOptions(link=data.get('click_action')),
 			),
@@ -222,13 +226,17 @@ def send_notification_to_topic():
 	title = request.args.get('title')
 	body = request.args.get('body')
 	data = json.loads(request.args.get('data'))
+	notification_icon = data.get('notification_icon')
+	if not notification_icon:
+		notification_icon = ''
 	app.logger.debug(f'Topic Notification Request - {request.args}')
 	message = messaging.Message(
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
                 title=title,
                 body=body,
-                icon='https://erpsgs.in/assets/raven/raven_mobile/favicon-64x64.png',
+                icon=notification_icon,
+				badge= 'https://erpsgs.in/files/raven.png'
             ),
 			fcm_options=messaging.WebpushFCMOptions(link=data.get('click_action')),
         ),

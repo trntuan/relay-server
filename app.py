@@ -4,7 +4,7 @@ import json
 from firebase_admin import exceptions, messaging
 from flask import Flask, request, jsonify
 from flask_httpauth import HTTPBasicAuth
-from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY
+from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY, BADGE_ICON
 
 app = Flask(__name__)
 firebase_app = firebase_admin.initialize_app()
@@ -179,7 +179,7 @@ def send_notification_to_user():
 					title=title,
 					body=body,
 					icon= notification_icon,
-					badge= 'https://erpsgs.in/files/raven.png'
+					badge= BADGE_ICON
 				),
 				fcm_options=messaging.WebpushFCMOptions(link=data.get('click_action')),
 			),
@@ -236,7 +236,7 @@ def send_notification_to_topic():
                 title=title,
                 body=body,
                 icon=notification_icon,
-				badge= 'https://erpsgs.in/files/raven.png'
+				badge= BADGE_ICON
             ),
 			fcm_options=messaging.WebpushFCMOptions(link=data.get('click_action')),
         ),

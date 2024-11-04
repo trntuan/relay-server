@@ -29,8 +29,9 @@ FIREBASE_CONFIG = {
   "measurementId": "G-XXXXXXXXXG"
 }
 ```
-10. Run the application
-11. Add the `API_SECRET` & `API_KEY` in ERPNext Push Notification settings and then enable the Push Notification Relay option.
+10. Change the `USER_DEVICE_MAP` key values to `{project_name}_{site_name}` where `project_name` could be `raven` or `hrms` & `site_name` as your site name while setting up the Frappe bench.
+11. Run the application
+12. Add the `API_SECRET` & `API_KEY` in ERPNext Push Notification settings and then enable the Push Notification Relay option.
 
 ## Running the Application
 ``` bash

@@ -66,7 +66,8 @@ WantedBy=multi-user.target
 
 
 
-## fix CORS issue [ localhost ] :
+## Fix CORS issue [ localhost ] :
+- In case you are running Frappe instance on localhost, then perform the following steps to avoid CORS issues
 
   - Run the following commands
     ``` bash

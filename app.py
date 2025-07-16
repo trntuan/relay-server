@@ -4,9 +4,11 @@ import json
 from firebase_admin import exceptions, messaging
 from flask import Flask, request, jsonify
 from flask_httpauth import HTTPBasicAuth
+from flask_cors import CORS 
 from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY, BADGE_ICON
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 firebase_app = firebase_admin.initialize_app()
 
 basic_auth = HTTPBasicAuth()
@@ -256,3 +258,5 @@ if __name__ != '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8899, debug=True)

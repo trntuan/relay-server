@@ -96,3 +96,6 @@ WantedBy=multi-user.target
       ```
   
   - Restart bench and gunicorn server
+
+# manual start
+$ python app.py

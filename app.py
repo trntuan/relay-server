@@ -72,6 +72,21 @@ def subscribe_to_topic():
 	}
 	return response, 400
 
+@app.post("/api/method/raven_cloud.api.notification.register_site")
+@basic_auth.login_required
+def register_site():
+    site_name = request.args.get('site_name')
+    app.logger.info(f"Registering site: {site_name}")
+
+    # Trả về một response JSON giống như bên Raven Cloud mong đợi
+    return jsonify({
+        "message": {
+            "vapid_public_key": VAPID_PUBLIC_KEY,
+            "config": FIREBASE_CONFIG
+        }
+    })
+
+
 @app.post("/api/method/notification_relay.api.topic.unsubscribe")
 @basic_auth.login_required
 def unsubscribe_to_topic():

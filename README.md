@@ -101,5 +101,5 @@ WantedBy=multi-user.target
 ```
 $ source env/bin/activate
 $ export GOOGLE_APPLICATION_CREDENTIALS="/home/dev/workspace/projects/frappe/relay-server/relay-server/my-firebase.json"
-$ python app.py
+$ gunicorn app:app -c gunicorn.conf.py
 ```

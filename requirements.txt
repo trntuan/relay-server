@@ -2,3 +2,4 @@ Flask
 Gunicorn
 flask-httpauth
 firebase-admin
+flask-cors

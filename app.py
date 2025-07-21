@@ -78,7 +78,7 @@ def register_site():
     site_name = request.args.get('site_name')
     app.logger.info(f"Registering site: {site_name}")
 
-    # Trả về một response JSON giống như bên Raven Cloud mong đợi
+    # return the VAPID public key and Firebase config
     return jsonify({
         "message": {
             "vapid_public_key": VAPID_PUBLIC_KEY,
@@ -246,7 +246,7 @@ def send_notification():
 
     try:
         messages = json.loads(messages_param)
-    # Nếu lỗi JSON
+    # If the 'messages' parameter is not a valid JSON, return an error
     except json.JSONDecodeError:
         return {"error": "Invalid 'messages' format"}, 400
 
@@ -269,7 +269,7 @@ def send_notification():
             )
         )
 
-        # Chỉ thêm fcm_options nếu link là HTTPS
+        # Only add fcm_options if link is HTTPS
         if click_action and click_action.startswith("https://"):
             webpush_config.fcm_options = messaging.WebpushFCMOptions(link=click_action)
 

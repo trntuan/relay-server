@@ -97,6 +97,157 @@ WantedBy=multi-user.target
   
   - Restart bench and gunicorn server
 
+## 🔐 Secure with API\_KEY & API\_SECRET
+
+All API requests require **HTTP Basic Auth** using your `API_KEY` as the username and `API_SECRET` as the password.
+
+### Example using `curl`:
+
+```bash
+curl -u "API_KEY:API_SECRET" http://127.0.0.1:8899/api/...
+```
+
+---
+
+## 🧚‍♂️ Testing with Postman
+
+### 1. Authorization
+
+* Type: `Basic Auth`
+* Username: `API_KEY`
+* Password: `API_SECRET`
+
+---
+
+## 📌 API Endpoints
+
+### 1. Add FCM Token for a User
+
+* **Method:** `POST`
+
+* **Endpoint:** `/api/method/notification_relay.api.token.add`
+
+* **Query Parameters:**
+
+  * `project_name`: project name (e.g., `raven`)
+  * `site_name`: site name (e.g., `erpsgs.in`)
+  * `user_id`: user email or ID (e.g., `john@example.com`)
+  * `fcm_token`: the FCM token from client
+
+* **Example URL:**
+
+```
+http://127.0.0.1:8899/api/method/notification_relay.api.token.add?project_name=raven&site_name=erpsgs.in&user_id=john@example.com&fcm_token=abc123
+```
+
+---
+
+### 2. Send Notification to a User (Recommended)
+
+* **Method:** `POST`
+
+* **Endpoint:** `/api/method/notification_relay.api.send_notification.user`
+
+* **Query Parameters:**
+
+  * `project_name`, `site_name`, `user_id`, `title`, `body`
+
+* **Request Body (raw JSON):**
+
+```json
+{
+  "click_action": "https://example.com",
+  "notification_icon": "/icon.png"
+}
+```
+
+* **Example URL:**
+
+```
+http://127.0.0.1:8899/api/method/notification_relay.api.send_notification.user?project_name=raven&site_name=erpsgs.in&user_id=john@example.com&title=Hello&body=World
+```
+
+---
+
+### 3. Register a Site
+
+* **Method:** `POST`
+
+* **Endpoint:** `/api/method/raven_cloud.api.notification.register_site`
+
+* **Auth:** Requires Basic Auth
+
+* **Query Parameters:**
+
+  * `site_name`: name of the site to register
+
+* **Purpose:** Returns the `vapid_public_key` and Firebase configuration required by the client.
+
+* **Example Response:**
+
+```json
+{
+  "message": {
+    "vapid_public_key": "<public_key>",
+    "config": {
+      "apiKey": "...",
+      "authDomain": "..."
+    }
+  }
+}
+```
+
+---
+
+### 4. Send Bulk Notifications
+
+* **Method:** `POST`
+
+* **Endpoint:** `/api/method/raven_cloud.api.notification.send`
+
+* **Query Parameters:**
+
+  * `project_name`: name of the project
+  * `site_name`: name of the site
+  * `messages`: a JSON-encoded array of notification objects
+
+* **Notification Format:**
+
+```json
+[
+  {
+    "tokens": ["fcm_token_1", "fcm_token_2"],
+    "notification": {
+      "title": "Hello",
+      "body": "World"
+    },
+    "data": {
+      "notification_icon": "/icon.png"
+    },
+    "click_action": "https://example.com",
+    "image": "https://example.com/image.png"
+  }
+]
+```
+
+* **Notes:**
+
+  * `click_action` is only included if it starts with `https://`.
+  * You can send to multiple tokens per object.
+
+* **Example Response:**
+
+```json
+{
+  "message": {
+    "success": 200,
+    "message": "3 notifications sent via 'messages' payload"
+  }
+}
+```
+
+---
+
 # manual start
 ```
 $ source env/bin/activate

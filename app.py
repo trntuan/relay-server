@@ -4,9 +4,11 @@ import json
 from firebase_admin import exceptions, messaging
 from flask import Flask, request, jsonify
 from flask_httpauth import HTTPBasicAuth
+from flask_cors import CORS 
 from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY, BADGE_ICON
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 firebase_app = firebase_admin.initialize_app()
 
 basic_auth = HTTPBasicAuth()
@@ -70,6 +72,21 @@ def subscribe_to_topic():
 	}
 	return response, 400
 
+@app.post("/api/method/raven_cloud.api.notification.register_site")
+@basic_auth.login_required
+def register_site():
+    site_name = request.args.get('site_name')
+    app.logger.info(f"Registering site: {site_name}")
+
+    # return the VAPID public key and Firebase config
+    return jsonify({
+        "message": {
+            "vapid_public_key": VAPID_PUBLIC_KEY,
+            "config": FIREBASE_CONFIG
+        }
+    })
+
+
 @app.post("/api/method/notification_relay.api.topic.unsubscribe")
 @basic_auth.login_required
 def unsubscribe_to_topic():
@@ -100,7 +117,7 @@ def unsubscribe_to_topic():
 	return response, 400
 
 @app.post("/api/method/notification_relay.api.token.add")
-@basic_auth.login_required
+# @basic_auth.login_required
 def add_token():
 	project_name = request.args.get('project_name')
 	site_name = request.args.get('site_name')
@@ -218,6 +235,63 @@ def send_notification_to_user():
 		app.logger.info(f'User {user_id} has not enabled notifications')
 		return response, 400
 	return response
+
+
+@app.post("/api/method/raven_cloud.api.notification.send")
+def send_notification():
+    project_name = request.args.get('project_name')
+    site_name = request.args.get('site_name')
+    key = f'{project_name}_{site_name}'
+    messages_param = request.args.get('messages')
+
+    try:
+        messages = json.loads(messages_param)
+    # If the 'messages' parameter is not a valid JSON, return an error
+    except json.JSONDecodeError:
+        return {"error": "Invalid 'messages' format"}, 400
+
+    success_count = 0
+    for msg in messages:
+        tokens = msg.get('tokens', [])
+        title = msg.get('notification', {}).get('title', '')
+        body = msg.get('notification', {}).get('body', '')
+        data = msg.get('data', {})
+        click_action = msg.get('click_action')
+        image = msg.get('image', None)
+
+        webpush_config = messaging.WebpushConfig(
+            notification=messaging.WebpushNotification(
+                title=title,
+                body=body,
+                icon=data.get('notification_icon', ''),
+                image=image,
+                badge=BADGE_ICON
+            )
+        )
+
+        # Only add fcm_options if link is HTTPS
+        if click_action and click_action.startswith("https://"):
+            webpush_config.fcm_options = messaging.WebpushFCMOptions(link=click_action)
+
+        message = messaging.MulticastMessage(
+            webpush=webpush_config,
+            tokens=tokens
+        )
+
+        try:
+            response = messaging.send_each_for_multicast(message)
+            success_count += response.success_count
+        except exceptions.FirebaseError as e:
+            app.logger.error(f"Firebase error: {str(e)}")
+            continue
+
+    return {
+        "message": {
+            "success": 200,
+            "message": f"{success_count} notifications sent via 'messages' payload"
+        }
+    }
+
 
 @app.post("/api/method/notification_relay.api.send_notification.topic")
 @basic_auth.login_required

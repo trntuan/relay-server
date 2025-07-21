@@ -1,6 +1,6 @@
 env/
 .vscode/
-log/
+# log/
 __pycache__
 # erpsgs-frappe-firebase-adminsdk-cred.json
 firebase-config.json

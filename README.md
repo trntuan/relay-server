@@ -109,7 +109,7 @@ curl -u "API_KEY:API_SECRET" http://127.0.0.1:8899/api/...
 
 ---
 
-## 🧚‍♂️ Testing with Postman
+## Testing with Postman
 
 ### 1. Authorization
 

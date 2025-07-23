@@ -1,4 +1,6 @@
+import os
 import logging
+from dotenv import load_dotenv
 import firebase_admin
 import json
 from firebase_admin import exceptions, messaging
@@ -7,8 +9,16 @@ from flask_httpauth import HTTPBasicAuth
 from flask_cors import CORS 
 from my_secrets import API_SECRET, FIREBASE_CONFIG, VAPID_PUBLIC_KEY, BADGE_ICON
 
+# Load env
+load_dotenv()
+
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+# get the allowed origin from environment variable
+allowed_origin = os.getenv("ALLOWED_ORIGIN", "*")  # fallback is "*" if not set
+
+CORS(app, resources={r"/*": {"origins": allowed_origin}})
+
 firebase_app = firebase_admin.initialize_app()
 
 basic_auth = HTTPBasicAuth()
@@ -117,7 +127,6 @@ def unsubscribe_to_topic():
 	return response, 400
 
 @app.post("/api/method/notification_relay.api.token.add")
-# @basic_auth.login_required
 def add_token():
 	project_name = request.args.get('project_name')
 	site_name = request.args.get('site_name')
@@ -239,9 +248,6 @@ def send_notification_to_user():
 
 @app.post("/api/method/raven_cloud.api.notification.send")
 def send_notification():
-    project_name = request.args.get('project_name')
-    site_name = request.args.get('site_name')
-    key = f'{project_name}_{site_name}'
     messages_param = request.args.get('messages')
 
     try:

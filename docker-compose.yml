@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  relay-server:
+    build:
+      context: .
+    container_name: relay-server
+    ports:
+      - "8899:8080"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/my-firebase.json
+    volumes:
+      - ./.env:/app/.env
+      - ./my-firebase.json:/app/my-firebase.json
+      - ./my_secrets.py:/app/my_secrets.py

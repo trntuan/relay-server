@@ -432,7 +432,18 @@ def send_notification_to_users():
                 raise ValueError("No valid tokens found for specified users.")
 
             #  Send data-only push (no notification object)
+            webpush_config = messaging.WebpushConfig(
+                notification=messaging.WebpushNotification(
+                    title=title,
+                    body=body,
+                    icon=data.get('notification_icon', ''),
+                    image=image,
+                    badge=BADGE_ICON
+                )
+            )
+
             message = messaging.MulticastMessage(
+                webpush=webpush_config,
                 tokens=registration_tokens,
                 data={k: str(v) for k, v in data.items() if isinstance(v, (str, int, float, str))}
             )

@@ -38,6 +38,20 @@ def save_map_to_file(map):
 		json.dump(map, jsonfile)
 	print(json.dumps(map, indent=4))
 
+def is_similar_token(token1, token2, prefix_len=29):
+    return token1[:prefix_len] == token2[:prefix_len]
+
+
+def sanitize_click_action(url: str) -> str:
+        try:
+            parsed = urlparse(url)
+            scheme = 'https' if parsed.scheme == 'http' else parsed.scheme
+            hostname_only = parsed.hostname or ""
+            new_netloc = hostname_only
+            return urlunparse(parsed._replace(scheme=scheme, netloc=new_netloc))
+        except Exception:
+            return url
+
 @app.get('/api/method/notification_relay.api.get_config')
 def get_config():
 	response = {}
@@ -50,6 +64,8 @@ def verify_api_key(api_key, api_secret):
 	if api_key==API_KEY and api_secret==API_SECRET:
 		return True
 	return False
+
+
 
 @app.post("/api/method/notification_relay.api.topic.subscribe")
 @basic_auth.login_required
@@ -164,50 +180,55 @@ def add_token():
 # New API to create user token
 @app.post("/api/method/raven_cloud.api.notification.create_user_token")
 def create_user_token():
-	site_name = request.args.get('site_name')
-	user_id = request.args.get('user_id')
-	fcm_token = request.args.get('token')
+    site_name = request.args.get('site_name')
+    user_id = request.args.get('user_id')
+    fcm_token = request.args.get('token')
 
-	# Check if all required parameters are provided
-	if not all([site_name, user_id, fcm_token]):
-		app.logger.warning(f"Missing parameters: site_name={site_name}, user_id={user_id}, fcm_token={fcm_token}")
-		return {
-			'message': {
-				'success': 400,
-				'message': 'Missing required parameters'
-			}
-		}, 400
+    if not all([site_name, user_id, fcm_token]):
+        app.logger.warning(f"Missing parameters: site_name={site_name}, user_id={user_id}, fcm_token={fcm_token}")
+        return {
+            'message': {
+                'success': 400,
+                'message': 'Missing required parameters'
+            }
+        }, 400
 
-	key = site_name
-	app.logger.debug(f'Add Token Request - {request.args}')
+    key = site_name
+#     app.logger.debug(f'Add Token Request - {request.args}')
 
-	# Init nested map if needed
-	if key not in USER_DEVICE_MAP:
-		USER_DEVICE_MAP[key] = {}
+    if key not in USER_DEVICE_MAP:
+        USER_DEVICE_MAP[key] = {}
 
-	if user_id in USER_DEVICE_MAP[key]:
-		if fcm_token in USER_DEVICE_MAP[key][user_id]:
-			app.logger.info(f'Duplicate token found for user {user_id}')
-			return {
-				'message': {
-					'success': 200,
-					'message': 'User Token duplicate found'
-				}
-			}
-		else:
-			USER_DEVICE_MAP[key][user_id].append(fcm_token)
-	else:
-		USER_DEVICE_MAP[key][user_id] = [fcm_token]
+    if user_id in USER_DEVICE_MAP[key]:
+        existing_tokens = USER_DEVICE_MAP[key][user_id]
+        
+        # Check if the new token is similar to any existing token
+        for i, old_token in enumerate(existing_tokens):
+            if is_similar_token(old_token, fcm_token):
+                USER_DEVICE_MAP[key][user_id][i] = fcm_token
+                app.logger.info(f'Replaced old token with new one for user {user_id}')
+                save_map_to_file(USER_DEVICE_MAP)
+                return {
+                    'message': {
+                        'success': 200,
+                        'message': 'Old token replaced with refreshed token'
+                    }
+                }
 
-	app.logger.info(f'Token saved for user {user_id} at {key}')
-	save_map_to_file(USER_DEVICE_MAP)
+        #  If no similar token found, append the new token
+        USER_DEVICE_MAP[key][user_id].append(fcm_token)
+    else:
+        USER_DEVICE_MAP[key][user_id] = [fcm_token]
 
-	return {
-		'message': {
-			'success': 200,
-			'message': 'User Token added'
-		}
-	}
+#     app.logger.info(f'Token saved for user {user_id} at {key}')
+    save_map_to_file(USER_DEVICE_MAP)
+
+    return {
+        'message': {
+            'success': 200,
+            'message': 'User Token added'
+        }
+    }
 
 
 @app.post("/api/method/notification_relay.api.token.remove")
@@ -365,16 +386,6 @@ def send_notification_to_users():
         assert isinstance(messages, list), "'messages' must be a list"
     except (json.JSONDecodeError, AssertionError) as e:
         return jsonify({"error": f"Invalid 'messages' format: {str(e)}"}), 400
-
-    def sanitize_click_action(url: str) -> str:
-        try:
-            parsed = urlparse(url)
-            scheme = 'https' if parsed.scheme == 'http' else parsed.scheme
-            hostname_only = parsed.hostname or ""
-            new_netloc = hostname_only
-            return urlunparse(parsed._replace(scheme=scheme, netloc=new_netloc))
-        except Exception:
-            return url
 
     success_count = 0
     failures = []
